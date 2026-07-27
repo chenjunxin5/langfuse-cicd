@@ -27,6 +27,9 @@ jobs:
         with:
           python-version: "3.14"
 
+      - name: Install all dependencies
+        run: pip install langfuse langchain-openai langchain-core scikit-learn
+
       - name: Run Langfuse experiment action
         uses: langfuse/experiment-action@v1.0.6
         with:
@@ -44,5 +47,5 @@ jobs:
           # GitHub token so the action can comment on PRs
           github_token: ${{ github.token }}
 
-          # Additional Python dependencies needed by the experiment script
-          additional_packages: langchain-openai langchain-core scikit-learn
+          # Skip action's own SDK installation since we installed all deps above
+          should_skip_sdk_installation: true
