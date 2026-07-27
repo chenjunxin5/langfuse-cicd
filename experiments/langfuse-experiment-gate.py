@@ -91,3 +91,7 @@ def experiment(context: RunnerContext):
 
     return result
 
+
+if __name__ == "__main__":
+    result = llm_application.invoke("1+1等于几？")
+    print(f"Result: {result}")

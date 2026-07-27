@@ -18,6 +18,8 @@ jobs:
     concurrency:
       group: langfuse-experiment-${{ github.ref }}
       cancel-in-progress: true
+    env:
+      DASHSCOPE_API_KEY: ${{ secrets.DASHSCOPE_API_KEY }}
     steps:
       - uses: actions/checkout@v6
 
@@ -30,15 +32,8 @@ jobs:
       - name: Install all dependencies
         run: pip install langfuse langchain-openai langchain-core scikit-learn
 
-      - name: Debug API key
-        run: echo "DASHSCOPE_API_KEY=$DASHSCOPE_API_KEY"
-        env:
-          DASHSCOPE_API_KEY: ${{ secrets.DASHSCOPE_API_KEY }}
-
       - name: Run Langfuse experiment action
         uses: langfuse/experiment-action@v1.0.6
-        env:
-          DASHSCOPE_API_KEY: ${{ secrets.DASHSCOPE_API_KEY }}
         with:
           # credentials for Langfuse (set as repository secrets)
           langfuse_public_key: ${{ secrets.LANGFUSE_PUBLIC_KEY }}
