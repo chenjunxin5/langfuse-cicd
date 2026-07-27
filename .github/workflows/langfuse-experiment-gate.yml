@@ -30,6 +30,11 @@ jobs:
       - name: Install all dependencies
         run: pip install langfuse langchain-openai langchain-core scikit-learn
 
+      - name: Debug API key
+        run: echo "Key length: ${#DASHSCOPE_API_KEY}"
+        env:
+          DASHSCOPE_API_KEY: ${{ secrets.DASHSCOPE_API_KEY }}
+
       - name: Run Langfuse experiment action
         uses: langfuse/experiment-action@v1.0.6
         env:
