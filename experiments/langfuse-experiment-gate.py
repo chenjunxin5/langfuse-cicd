@@ -38,9 +38,11 @@ prompt = PromptTemplate.from_template("""*********
 问个问题:{input}
 *********""")
 
+api_key = os.environ.get("DASHSCOPE_API_KEY")
+print(api_key)
 model = ChatOpenAI(
     model=os.environ.get("LLM_MODEL", "qwen-turbo"),
-    api_key=os.environ.get("DASHSCOPE_API_KEY"),       # set via env secret in CI
+    api_key=api_key,       # set via env secret in CI
     base_url=os.environ.get("OPENAI_BASE_URL", "https://dashscope.aliyuncs.com/compatible-mode/v1"),
     temperature=0,
     seed=42,
