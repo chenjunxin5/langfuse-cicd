@@ -36,7 +36,7 @@ jobs:
           langfuse_base_url: https://cloud.langfuse.com
 
           # path to your experiment scripts (relative to repo root)
-          experiment_path: experiments/Charles-Demo1
+          experiment_path: experiments/langfuse-experiment-gate.py
 
           # dataset to run the experiment against
           dataset_name: Charles-Demo1
