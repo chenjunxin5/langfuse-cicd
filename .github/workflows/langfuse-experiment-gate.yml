@@ -38,7 +38,7 @@ jobs:
           # credentials for Langfuse (set as repository secrets)
           langfuse_public_key: ${{ secrets.LANGFUSE_PUBLIC_KEY }}
           langfuse_secret_key: ${{ secrets.LANGFUSE_SECRET_KEY }}
-          langfuse_base_url: https://cloud.langfuse.com
+          langfuse_base_url: https://jp.cloud.langfuse.com
 
           # path to your experiment scripts (relative to repo root)
           experiment_path: experiments/langfuse-experiment-gate.py
