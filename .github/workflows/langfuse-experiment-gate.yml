@@ -27,9 +27,6 @@ jobs:
         with:
           python-version: "3.14"
 
-      - name: Install dependencies
-        run: pip install -r requirements.txt
-
       - name: Run Langfuse experiment action
         uses: langfuse/experiment-action@v1.0.6
         with:
@@ -46,3 +43,6 @@ jobs:
 
           # GitHub token so the action can comment on PRs
           github_token: ${{ github.token }}
+
+          # Additional Python dependencies needed by the experiment script
+          additional_packages: langchain-openai langchain-core scikit-learn
