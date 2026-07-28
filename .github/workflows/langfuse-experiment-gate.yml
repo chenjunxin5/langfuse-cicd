@@ -82,7 +82,7 @@ jobs:
           langfuse_base_url: https://jp.cloud.langfuse.com
 
           experiment_path: experiments/langfuse-experiment-planning-agent.py
-          dataset_name: planning-agent-eval
+          dataset_name: planning-agent
 
           github_token: ${{ github.token }}
           should_skip_sdk_installation: true
