@@ -19,7 +19,7 @@ jobs:
       group: langfuse-experiment-${{ github.ref }}
       cancel-in-progress: true
     env:
-      DASHSCOPE_API_KEY: ${{ secrets.DASHSCOPE_API_KEY }}
+      dashscope_api_key: ${{ secrets.DASHSCOPE_API_KEY }}
     steps:
       - uses: actions/checkout@v6
 

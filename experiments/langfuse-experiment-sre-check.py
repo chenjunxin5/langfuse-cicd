@@ -9,8 +9,13 @@ from langchain_openai.chat_models import ChatOpenAI
 from langchain_core.output_parsers import StrOutputParser
 
 
-# --- 初始化 Langfuse 并获取 sre-check 提示词 ---
-langfuse = Langfuse()
+# --- 初始化 Langfuse ---
+# 本地运行时设置环境变量：LANGFUSE_PUBLIC_KEY, LANGFUSE_SECRET_KEY, LANGFUSE_BASE_URL
+langfuse = Langfuse(
+    public_key="pk-lf-d2f237a1-0533-44c0-a8fc-8bd8e79db7d5",
+    secret_key="sk-lf-7cce40b5-e96a-4d20-bc5c-bcd8449d70cf",
+    host="https://jp.cloud.langfuse.com",
+)
 
 prompt_obj = langfuse.get_prompt("sre-check")
 prompt_text = prompt_obj.prompt
@@ -19,9 +24,9 @@ prompt = PromptTemplate.from_template(prompt_text)
 
 
 # --- LLM chain ---
-api_key = os.environ.get("DASHSCOPE_API_KEY")
+api_key = os.environ.get("dashscope_api_key","sk-ws-H.EMHMELD.LKzU.MEUCIEgTw-viM44ZPCbWXa54wZKzIRijTPumuAhFlZQtTTgQAiEAgkY3x_K42UzLqFVdX7kxI9CC9tcxMs9c8Hqo0p-Sumk")
 model = ChatOpenAI(
-    model=os.environ.get("LLM_MODEL", "glm-5.2"),
+    model=os.environ.get("LLM_MODEL", "deepseek-v3.2"),
     api_key=api_key,
     base_url=os.environ.get("OPENAI_BASE_URL", "https://dashscope.aliyuncs.com/compatible-mode/v1"),
     temperature=0,
