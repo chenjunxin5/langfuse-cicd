@@ -86,3 +86,38 @@ jobs:
 
           github_token: ${{ github.token }}
           should_skip_sdk_installation: true
+
+  ipython-assistant-experiment:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: langfuse-ipython-assistant-experiment-${{ github.ref }}
+      cancel-in-progress: true
+    env:
+      DASHSCOPE_API_KEY: ${{ secrets.DASHSCOPE_API_KEY }}
+      IPYTHON_ASSISTANT_MODEL: "deepseek-v3.2"
+      IPYTHON_ASSISTANT_JUDGE_MODEL: "qwen-plus"
+      IPYTHON_ASSISTANT_OVERALL_THRESHOLD: "0.75"
+      IPYTHON_ASSISTANT_ENABLE_EXECUTION: "false"
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup Python (optional)
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+
+      - name: Install all dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run Langfuse experiment action(ipython-assistant)
+        uses: langfuse/experiment-action@v1.0.6
+        with:
+          langfuse_public_key: ${{ secrets.LANGFUSE_PUBLIC_KEY }}
+          langfuse_secret_key: ${{ secrets.LANGFUSE_SECRET_KEY }}
+          langfuse_base_url: https://jp.cloud.langfuse.com
+
+          experiment_path: experiments/langfuse-experiment-ipython-assistant.py
+          dataset_name: ipython-assistant
+
+          github_token: ${{ github.token }}
+          should_skip_sdk_installation: true
