@@ -13,14 +13,14 @@ permissions:
   actions: read
 
 jobs:
-  experiment:
+  sre-check-experiment:
     runs-on: ubuntu-latest
     concurrency:
-      group: langfuse-experiment-${{ github.ref }}
+      group: langfuse-sre-check-experiment-${{ github.ref }}
       cancel-in-progress: true
     env:
       DASHSCOPE_API_KEY: ${{ secrets.DASHSCOPE_API_KEY }}
-      EVAL_MODELS: "glm-5.2,deepseek-v3.2,qwen-plus,kimi-k2.5,deepseek-v4-pro,deepseek-r1"
+      EVAL_MODELS: "glm-5.2,deepseek-v3.2"
     steps:
       - uses: actions/checkout@v6
 
@@ -51,4 +51,38 @@ jobs:
           github_token: ${{ github.token }}
 
           # Skip action's own SDK installation since we installed all deps above
+          should_skip_sdk_installation: true
+
+  planning-agent-experiment:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: langfuse-planning-agent-experiment-${{ github.ref }}
+      cancel-in-progress: true
+    env:
+      DASHSCOPE_API_KEY: ${{ secrets.DASHSCOPE_API_KEY }}
+      PLANNING_AGENT_MODEL: "deepseek-v3.2"
+      PLANNING_JUDGE_MODEL: "qwen-plus"
+      PLANNING_OVERALL_THRESHOLD: "0.75"
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup Python (optional)
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+
+      - name: Install all dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run Langfuse experiment action(planning-agent)
+        uses: langfuse/experiment-action@v1.0.6
+        with:
+          langfuse_public_key: ${{ secrets.LANGFUSE_PUBLIC_KEY }}
+          langfuse_secret_key: ${{ secrets.LANGFUSE_SECRET_KEY }}
+          langfuse_base_url: https://jp.cloud.langfuse.com
+
+          experiment_path: experiments/langfuse-experiment-planning-agent.py
+          dataset_name: planning-agent-eval
+
+          github_token: ${{ github.token }}
           should_skip_sdk_installation: true
