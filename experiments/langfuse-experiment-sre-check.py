@@ -11,11 +11,7 @@ from langchain_core.output_parsers import StrOutputParser
 
 # --- 初始化 Langfuse ---
 # 本地运行时设置环境变量：LANGFUSE_PUBLIC_KEY, LANGFUSE_SECRET_KEY, LANGFUSE_BASE_URL
-langfuse = Langfuse(
-    public_key="pk-lf-d2f237a1-0533-44c0-a8fc-8bd8e79db7d5",
-    secret_key="sk-lf-7cce40b5-e96a-4d20-bc5c-bcd8449d70cf",
-    host="https://jp.cloud.langfuse.com",
-)
+langfuse = Langfuse()
 
 prompt_obj = langfuse.get_prompt("sre-check")
 prompt_text = prompt_obj.prompt
@@ -24,7 +20,7 @@ prompt = PromptTemplate.from_template(prompt_text)
 
 
 # --- LLM chain ---
-api_key = os.environ.get("dashscope_api_key","sk-ws-H.EMHMELD.LKzU.MEUCIEgTw-viM44ZPCbWXa54wZKzIRijTPumuAhFlZQtTTgQAiEAgkY3x_K42UzLqFVdX7kxI9CC9tcxMs9c8Hqo0p-Sumk")
+api_key = os.environ.get("dashscope_api_key")
 model = ChatOpenAI(
     model=os.environ.get("LLM_MODEL", "deepseek-v3.2"),
     api_key=api_key,
