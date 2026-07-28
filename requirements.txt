@@ -1,4 +1,5 @@
 langfuse>=4.6.0
+langchain
 langchain-openai
 langchain-core
 scikit-learn
