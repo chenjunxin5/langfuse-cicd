@@ -32,7 +32,7 @@ jobs:
       - name: Install all dependencies
         run: pip install langfuse langchain-openai langchain-core scikit-learn
 
-      - name: Run Langfuse experiment action
+      - name: Run Langfuse experiment action(sre-check)
         uses: langfuse/experiment-action@v1.0.6
         with:
           # credentials for Langfuse (set as repository secrets)
@@ -41,10 +41,10 @@ jobs:
           langfuse_base_url: https://jp.cloud.langfuse.com
 
           # path to your experiment scripts (relative to repo root)
-          experiment_path: experiments/langfuse-experiment-gate.py
+          experiment_path: experiments/langfuse-experiment-sre-check.py
 
           # dataset to run the experiment against
-          dataset_name: Charles-Demo1
+          dataset_name: sre-check
 
           # GitHub token so the action can comment on PRs
           github_token: ${{ github.token }}
