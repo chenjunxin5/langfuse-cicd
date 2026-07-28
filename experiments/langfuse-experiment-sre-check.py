@@ -12,6 +12,7 @@ Expected by experiment-action: defines experiment(context: RunnerContext).
 import os
 from collections import defaultdict
 from langfuse import RegressionError, RunnerContext, Langfuse, Evaluation
+from langfuse.langchain import CallbackHandler
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_openai.chat_models import ChatOpenAI
 from langchain_core.output_parsers import StrOutputParser
@@ -22,6 +23,8 @@ langfuse = Langfuse()
 
 prompt_obj = langfuse.get_prompt("sre-check-chat", type="chat")
 prompt = ChatPromptTemplate.from_messages(prompt_obj.get_langchain_prompt())
+prompt.metadata = {"langfuse_prompt": prompt_obj}
+langfuse_handler = CallbackHandler()
 
 
 # --- 模型列表配置 ---
@@ -146,7 +149,7 @@ def experiment(context: RunnerContext):
         def process_item(*, item, **kwargs):
             model = get_model(model_name)
             llm_app = prompt | model | StrOutputParser()
-            return llm_app.invoke(item.input)
+            return llm_app.invoke(item.input, config={"callbacks": [langfuse_handler]})
 
         result = context.run_experiment(
             name=f"langfuse-experiment-sre-check-{model_name}",
@@ -190,5 +193,5 @@ if __name__ == "__main__":
     for model_name in EVAL_MODELS:
         model = get_model(model_name.strip())
         llm_app = prompt | model | StrOutputParser()
-        result = llm_app.invoke(test_input)
+        result = llm_app.invoke(test_input, config={"callbacks": [langfuse_handler]})
         print(f"[{model_name.strip()}] Result: {result}")
