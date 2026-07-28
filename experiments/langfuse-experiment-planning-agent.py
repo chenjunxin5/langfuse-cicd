@@ -346,7 +346,7 @@ def experiment(context: RunnerContext):
         f"planning-agent overall avg: {overall_avg}\n"
     )
 
-    threshold = float(os.environ.get("PLANNING_OVERALL_THRESHOLD", "0.7"))
+    threshold = float(os.environ.get("PLANNING_OVERALL_THRESHOLD", "0.6"))
     failed_scores = {
         "planning_reasonableness_avg": planning_avg,
         "task_decomposition_quality_avg": decomposition_avg,

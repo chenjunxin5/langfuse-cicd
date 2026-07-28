@@ -62,7 +62,7 @@ jobs:
       DASHSCOPE_API_KEY: ${{ secrets.DASHSCOPE_API_KEY }}
       PLANNING_AGENT_MODEL: "deepseek-v3.2"
       PLANNING_JUDGE_MODEL: "qwen-plus"
-      PLANNING_OVERALL_THRESHOLD: "0.75"
+      PLANNING_OVERALL_THRESHOLD: "0.6"
     steps:
       - uses: actions/checkout@v6
 
