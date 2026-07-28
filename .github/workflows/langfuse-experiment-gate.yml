@@ -19,7 +19,8 @@ jobs:
       group: langfuse-experiment-${{ github.ref }}
       cancel-in-progress: true
     env:
-      dashscope_api_key: ${{ secrets.DASHSCOPE_API_KEY }}
+      DASHSCOPE_API_KEY: ${{ secrets.DASHSCOPE_API_KEY }}
+      EVAL_MODELS: "glm-5.2,deepseek-v3.2,qwen-plus,kimi-k2.5,deepseek-v4-pro,MiniMax-M2.5,deepseek-r1"
     steps:
       - uses: actions/checkout@v6
 
