@@ -31,7 +31,7 @@ jobs:
           python-version: "3.14"
 
       - name: Install all dependencies
-        run: pip install langfuse langchain-openai langchain-core scikit-learn
+        run: pip install -r requirements.txt
 
       - name: Run Langfuse experiment action(sre-check)
         uses: langfuse/experiment-action@v1.0.6
