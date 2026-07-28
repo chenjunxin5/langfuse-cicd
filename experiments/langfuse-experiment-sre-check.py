@@ -12,7 +12,7 @@ Expected by experiment-action: defines experiment(context: RunnerContext).
 import os
 from collections import defaultdict
 from langfuse import RegressionError, RunnerContext, Langfuse, Evaluation
-from langchain_core.prompts import PromptTemplate
+from langchain_core.prompts import ChatPromptTemplate
 from langchain_openai.chat_models import ChatOpenAI
 from langchain_core.output_parsers import StrOutputParser
 
@@ -20,10 +20,11 @@ from langchain_core.output_parsers import StrOutputParser
 # --- 初始化 Langfuse ---
 langfuse = Langfuse()
 
-prompt_obj = langfuse.get_prompt("sre-check")
-prompt_text = prompt_obj.prompt
-
-prompt = PromptTemplate.from_template(prompt_text)
+prompt_obj = langfuse.get_prompt("sre-check-chat")
+prompt = ChatPromptTemplate.from_messages([
+    ("system", prompt_obj.system_prompt),
+    ("user", prompt_obj.prompt),
+])
 
 
 # --- 模型列表配置 ---
@@ -97,13 +98,8 @@ def average_accuracy_by_model(*, item_results, **kwargs):
         avg = sum(scores) / len(scores) if scores else 0
         model_avgs[model_name] = avg
 
-    # 输出对比结果
-    print("\n" + "=" * 60)
-    print("多模型准确率对比")
-    print("=" * 60)
-    for model_name, avg in sorted(model_avgs.items(), key=lambda x: -x[1]):
-        print(f"  {model_name}: {avg:.2%}")
-    print("=" * 60 + "\n")
+    # 输出对比结果（per-model evaluator 不打印，只返回指标）
+    # 最终汇总在 experiment 主函数统一打印
 
     # 返回所有模型的平均准确率（用于阈值判断）
     all_avgs = list(model_avgs.values())
@@ -149,9 +145,6 @@ def experiment(context: RunnerContext):
 
     for model_name in EVAL_MODELS:
         model_name = model_name.strip()
-        print(f"\n{'='*60}")
-        print(f"评估模型: {model_name}")
-        print(f"{'='*60}")
 
         def process_item(*, item, **kwargs):
             model = get_model(model_name)
@@ -173,13 +166,13 @@ def experiment(context: RunnerContext):
         all_model_results[model_name] = avg_accuracy
 
     # 输出最终对比
-    print(f"\n{'='*60}")
-    print("多模型准确率对比汇总")
-    print(f"{'='*60}")
+    print(f"\n{'='*50}")
+    print(" 多模型准确率对比汇总")
+    print(f"{'='*50}")
     for model_name, avg in sorted(all_model_results.items(), key=lambda x: -x[1] if x[1] else 0):
         avg_str = f"{avg:.2%}" if avg is not None else "N/A"
         print(f"  {model_name}: {avg_str}")
-    print(f"{'='*60}\n")
+    print(f"{'='*50}\n")
 
     # 用最低准确率的模型做阈值判断
     valid_avgs = [v for v in all_model_results.values() if v is not None]
