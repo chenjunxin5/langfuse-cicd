@@ -20,11 +20,8 @@ from langchain_core.output_parsers import StrOutputParser
 # --- 初始化 Langfuse ---
 langfuse = Langfuse()
 
-prompt_obj = langfuse.get_prompt("sre-check-chat")
-prompt = ChatPromptTemplate.from_messages([
-    ("system", prompt_obj.system_prompt),
-    ("user", prompt_obj.prompt),
-])
+prompt_obj = langfuse.get_prompt("sre-check-chat", type="chat")
+prompt = ChatPromptTemplate.from_messages(prompt_obj.get_langchain_prompt())
 
 
 # --- 模型列表配置 ---
