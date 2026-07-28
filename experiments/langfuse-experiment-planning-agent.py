@@ -28,7 +28,6 @@ import os
 import re
 
 from langchain_core.output_parsers import StrOutputParser
-from langchain_core.messages import SystemMessage
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_openai.chat_models import ChatOpenAI
 from langfuse import Evaluation, Langfuse, RegressionError, RunnerContext
@@ -38,16 +37,13 @@ from langfuse.langchain import CallbackHandler
 langfuse = Langfuse()
 
 planning_prompt_obj = langfuse.get_prompt(
-    "planning-agent",
-    type="text",
+    "planning-agent-chat",
+    type="chat",
     label="latest",
     cache_ttl_seconds=0,
 )
 planning_prompt = ChatPromptTemplate.from_messages(
-    [
-        SystemMessage(content=planning_prompt_obj.get_langchain_prompt()),
-        ("user", "{planning_user_message}"),
-    ]
+    planning_prompt_obj.get_langchain_prompt()
 )
 planning_prompt.metadata = {"langfuse_prompt": planning_prompt_obj}
 
@@ -105,6 +101,7 @@ def clamp_score(value):
 
 
 def judge_planning_output(input, output, expected_output, metadata):
+    """对单个样本调用一次 LLM judge，并缓存解析后的评分结果。"""
     cache_key = json.dumps(
         {
             "input": input,
@@ -212,6 +209,7 @@ planning-agent 实际输出：
 def planning_reasonableness_evaluator(
     *, input, output, expected_output, metadata, **kwargs
 ):
+    """单样本评估器：评估规划是否符合预期的故障诊断流程。"""
     result = judge_planning_output(input, output, expected_output, metadata)
     return Evaluation(
         name="planning_reasonableness",
@@ -223,6 +221,7 @@ def planning_reasonableness_evaluator(
 def task_decomposition_quality_evaluator(
     *, input, output, expected_output, metadata, **kwargs
 ):
+    """单样本评估器：评估任务原子性、依赖关系、agent 选择和 slots 质量。"""
     result = judge_planning_output(input, output, expected_output, metadata)
     return Evaluation(
         name="task_decomposition_quality",
@@ -232,6 +231,7 @@ def task_decomposition_quality_evaluator(
 
 
 def format_compliance_evaluator(*, input, output, expected_output, metadata, **kwargs):
+    """单样本评估器：评估输出是否符合 planning-agent 的 JSON 格式要求。"""
     result = judge_planning_output(input, output, expected_output, metadata)
     return Evaluation(
         name="format_compliance",
@@ -241,6 +241,7 @@ def format_compliance_evaluator(*, input, output, expected_output, metadata, **k
 
 
 def planning_overall_evaluator(*, input, output, expected_output, metadata, **kwargs):
+    """单样本评估器：输出用于准入判断的综合评分。"""
     result = judge_planning_output(input, output, expected_output, metadata)
     return Evaluation(
         name="planning_overall",
@@ -250,6 +251,7 @@ def planning_overall_evaluator(*, input, output, expected_output, metadata, **kw
 
 
 def average_score(item_results, score_name):
+    """Run 级公共方法：计算某个单样本评分在整个数据集上的平均值。"""
     scores = [
         evaluation.value
         for item_result in item_results
@@ -262,6 +264,7 @@ def average_score(item_results, score_name):
 
 
 def average_planning_reasonableness(*, item_results, **kwargs):
+    """Run 级评估器：计算全量样本的规划合理性平均分。"""
     value = average_score(item_results, "planning_reasonableness")
     return Evaluation(
         name="planning_reasonableness_avg",
@@ -271,6 +274,7 @@ def average_planning_reasonableness(*, item_results, **kwargs):
 
 
 def average_task_decomposition_quality(*, item_results, **kwargs):
+    """Run 级评估器：计算全量样本的任务拆解质量平均分。"""
     value = average_score(item_results, "task_decomposition_quality")
     return Evaluation(
         name="task_decomposition_quality_avg",
@@ -280,6 +284,7 @@ def average_task_decomposition_quality(*, item_results, **kwargs):
 
 
 def average_format_compliance(*, item_results, **kwargs):
+    """Run 级评估器：计算全量样本的 JSON / schema 合规性平均分。"""
     value = average_score(item_results, "format_compliance")
     return Evaluation(
         name="format_compliance_avg",
@@ -289,6 +294,7 @@ def average_format_compliance(*, item_results, **kwargs):
 
 
 def average_planning_overall(*, item_results, **kwargs):
+    """Run 级评估器：计算用于回归阈值判断的综合平均分。"""
     value = average_score(item_results, "planning_overall")
     return Evaluation(
         name="planning_overall_avg",
@@ -303,7 +309,7 @@ def experiment(context: RunnerContext):
     def process_item(*, item, **kwargs):
         planning_chain = planning_prompt | get_model(model_name) | StrOutputParser()
         return planning_chain.invoke(
-            {"planning_user_message": format_planning_user_message(item.input)},
+            {"question": format_planning_user_message(item.input)},
             config={"callbacks": [langfuse_handler]},
         )
 
@@ -372,7 +378,7 @@ if __name__ == "__main__":
     ) | StrOutputParser()
     print(
         planning_chain.invoke(
-            {"planning_user_message": format_planning_user_message(sample_input)},
+            {"question": format_planning_user_message(sample_input)},
             config={"callbacks": [langfuse_handler]},
         )
     )

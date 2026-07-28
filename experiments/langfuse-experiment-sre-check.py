@@ -24,31 +24,13 @@ from langchain_core.output_parsers import StrOutputParser
 langfuse = Langfuse()
 
 prompt_obj = langfuse.get_prompt(
-    "sre-check",
-    type="text",
+    "sre-check-chat",
+    type="chat",
     label="latest",
     cache_ttl_seconds=0,
 )
-
-OUTPUT_FORMAT_INSTRUCTIONS = """
-
-输出要求：
-你必须只输出一个 JSON 对象，不要输出 Markdown、代码块或额外解释。
-JSON 格式必须为：{{"answer":"是","label":"SRE_CHECK","confidence":0.0,"reason":"一句话说明"}}
-
-字段要求：
-- answer 只能是 "是" 或 "否"。
-- label 只能是 "SRE_CHECK" 或 "NOT_SRE_CHECK"。
-- answer="是" 时 label 必须是 "SRE_CHECK"。
-- answer="否" 时 label 必须是 "NOT_SRE_CHECK"。
-- confidence 是 0 到 1 之间的数字。
-- reason 中不要使用 "是" 或 "否" 作为分类结论，只简述判断依据。
-"""
-
-prompt = ChatPromptTemplate.from_template(
-    prompt_obj.get_langchain_prompt() + OUTPUT_FORMAT_INSTRUCTIONS,
-    metadata={"langfuse_prompt": prompt_obj},
-)
+prompt = ChatPromptTemplate.from_messages(prompt_obj.get_langchain_prompt())
+prompt.metadata = {"langfuse_prompt": prompt_obj}
 langfuse_handler = CallbackHandler()
 
 
