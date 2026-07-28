@@ -21,9 +21,11 @@ from langchain_core.output_parsers import StrOutputParser
 # --- 初始化 Langfuse ---
 langfuse = Langfuse()
 
-prompt_obj = langfuse.get_prompt("sre-check-chat", type="chat")
-prompt = ChatPromptTemplate.from_messages(prompt_obj.get_langchain_prompt())
-prompt.metadata = {"langfuse_prompt": prompt_obj}
+prompt_obj = langfuse.get_prompt("sre-check", type="text")
+prompt = ChatPromptTemplate.from_template(
+    prompt_obj.get_langchain_prompt(),
+    metadata={"langfuse_prompt": prompt_obj},
+)
 langfuse_handler = CallbackHandler()
 
 
