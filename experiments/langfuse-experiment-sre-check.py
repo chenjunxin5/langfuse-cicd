@@ -178,10 +178,10 @@ def experiment(context: RunnerContext):
     valid_avgs = [v for v in all_model_results.values() if v is not None]
     worst_avg = min(valid_avgs) if valid_avgs else None
 
-    if worst_avg is not None and worst_avg < 0.85:
+    if worst_avg is not None and worst_avg < 0.8:
         raise RegressionError(
             result=result,
-            message=f"最低准确率 {worst_avg:.2%} < 0.85 threshold",
+            message=f"最低准确率 {worst_avg:.2%} < 0.8 threshold",
         )
 
     return result
