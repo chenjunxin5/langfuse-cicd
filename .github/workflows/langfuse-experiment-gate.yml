@@ -20,7 +20,7 @@ jobs:
       cancel-in-progress: true
     env:
       DASHSCOPE_API_KEY: ${{ secrets.DASHSCOPE_API_KEY }}
-      EVAL_MODELS: "glm-5.2,deepseek-v3.2"
+      EVAL_MODELS: "kimi-k2.5,deepseek-v3.2"
     steps:
       - uses: actions/checkout@v6
 

@@ -10,6 +10,8 @@ Expected by experiment-action: defines experiment(context: RunnerContext).
 }
 """
 import os
+import json
+import re
 from collections import defaultdict
 from langfuse import RegressionError, RunnerContext, Langfuse, Evaluation
 from langfuse.langchain import CallbackHandler
@@ -27,8 +29,24 @@ prompt_obj = langfuse.get_prompt(
     label="latest",
     cache_ttl_seconds=0,
 )
+
+OUTPUT_FORMAT_INSTRUCTIONS = """
+
+输出要求：
+你必须只输出一个 JSON 对象，不要输出 Markdown、代码块或额外解释。
+JSON 格式必须为：{{"answer":"是","label":"SRE_CHECK","confidence":0.0,"reason":"一句话说明"}}
+
+字段要求：
+- answer 只能是 "是" 或 "否"。
+- label 只能是 "SRE_CHECK" 或 "NOT_SRE_CHECK"。
+- answer="是" 时 label 必须是 "SRE_CHECK"。
+- answer="否" 时 label 必须是 "NOT_SRE_CHECK"。
+- confidence 是 0 到 1 之间的数字。
+- reason 中不要使用 "是" 或 "否" 作为分类结论，只简述判断依据。
+"""
+
 prompt = ChatPromptTemplate.from_template(
-    prompt_obj.get_langchain_prompt(),
+    prompt_obj.get_langchain_prompt() + OUTPUT_FORMAT_INSTRUCTIONS,
     metadata={"langfuse_prompt": prompt_obj},
 )
 langfuse_handler = CallbackHandler()
@@ -50,29 +68,83 @@ def get_model(model_name):
     )
 
 
+def normalize_label(value):
+    if value is None:
+        return None
+
+    normalized = str(value).strip().upper()
+    if normalized in {"是", "YES", "Y", "TRUE", "SRE", "SRE_CHECK"}:
+        return "是"
+    if normalized in {"否", "NO", "N", "FALSE", "NOT_SRE", "NOT_SRE_CHECK"}:
+        return "否"
+    return None
+
+
+def extract_json_object(text):
+    text = text.strip()
+    if not text:
+        return None
+
+    fenced_match = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", text, re.DOTALL)
+    if fenced_match:
+        text = fenced_match.group(1).strip()
+
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError:
+        pass
+
+    object_match = re.search(r"\{.*\}", text, re.DOTALL)
+    if not object_match:
+        return None
+
+    try:
+        return json.loads(object_match.group(0))
+    except json.JSONDecodeError:
+        return None
+
+
+def parse_model_answer(output):
+    parsed = extract_json_object(output)
+    if isinstance(parsed, dict):
+        answer = normalize_label(parsed.get("answer"))
+        if answer:
+            return answer, "json.answer"
+
+        label = normalize_label(parsed.get("label"))
+        if label:
+            return label, "json.label"
+
+    first_line = output.strip().splitlines()[0].strip() if output.strip() else ""
+    first_token = re.split(r"[\s,，。；;:：]", first_line, maxsplit=1)[0].strip()
+    fallback_answer = normalize_label(first_token)
+    if fallback_answer:
+        return fallback_answer, "fallback.first_token"
+
+    return None, "unparseable"
+
+
 # --- 评估器 ---
 def sre_classification_evaluator(*, input, output, expected_output, metadata, **kwargs):
     """
-    直接代码判断输出是否正确分类
+    优先解析结构化输出，避免全文包含“是/否”造成误判。
     """
     try:
-        expected = expected_output.strip()
+        expected = normalize_label(expected_output)
         model_output = output.strip()
+        actual, parse_source = parse_model_answer(model_output)
 
-        # 检查输出是否包含期望的分类
-        if expected == "是":
-            is_correct = 1.0 if "是" in model_output and "否" not in model_output else 0.0
-        elif expected == "否":
-            is_correct = 1.0 if "否" in model_output else 0.0
-        else:
-            is_correct = 0.0
+        is_correct = 1.0 if actual is not None and actual == expected else 0.0
 
         model_name = metadata.get("model", "default") if metadata else "default"
 
         return Evaluation(
             name="sre_classification",
             value=is_correct,
-            comment=f"model={model_name}, expected={expected}, output={model_output}",
+            comment=(
+                f"model={model_name}, expected={expected}, actual={actual}, "
+                f"parse_source={parse_source}, output={model_output}"
+            ),
         )
     except Exception as e:
         return Evaluation(
